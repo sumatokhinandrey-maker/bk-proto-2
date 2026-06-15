@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Бикипер</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --primary: #009DA5;
+  --primary-dark: #00838F;
+  --bg: #F2F2F2;
+  --white: #FFFFFF;
+  --text: #222222;
+  --text-md: #444444;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --text-disabled: #BBBBBB;
+  --border: #E8E8E8;
+  --border-light: #F0F0F0;
+  --danger: #E63956;
+  --success: #2DB842;
+  --status-red: #E63956;
+  --status-green: #43A047;
+  --status-gray: #BDBDBD;
+  --tab-bar-h: 52px;
+  --bottom-safe: env(safe-area-inset-bottom, 0px);
+}
+html, body {
+  height: 100%; width: 100%;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px; color: var(--text); background: var(--bg);
+  overflow: hidden;
+  touch-action: manipulation;
+}
+@media (min-width: 500px) {
+  html, body { background: #E0E0E0; }
+}
+.app {
+  width: 100%; height: 100%; margin: 0 auto;
+  background: var(--bg); position: relative; overflow: hidden;
+}
+@media (min-width: 500px) {
+  .app { max-width: 390px; }
+}
+.screen {
+  display: none; flex-direction: column;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg); z-index: 1;
+}
+.screen.active { display: flex; z-index: 2; }
+.screen-body {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--tab-bar-h) + var(--bottom-safe) + 4px);
+}
+
+/* STATUS BAR */
+.status-bar { display: none; }
+.sb-icons { display: none; }
+
+/* HEADERS */
+.header-teal {
+  height: 50px; background: var(--primary);
+  display: flex; align-items: center; padding: 0 12px;
+  color: #fff; font-size: 18px; font-weight: 700;
+  flex-shrink: 0; gap: 12px;
+}
+.header-white {
+  min-height: 54px; background: var(--white);
+  display: flex; align-items: center; padding: 12px 16px;
+  color: var(--text); font-size: 19px; font-weight: 700;
+  flex-shrink: 0; gap: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.back-btn {
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: none; background: none; color: inherit; padding: 0; flex-shrink: 0;
+}
+.back-btn svg { width: 20px; height: 20px; }
+
+/* TAB BAR */
+.tab-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  width: 100%;
+  height: calc(var(--tab-bar-h) + var(--bottom-safe));
+  padding-bottom: var(--bottom-safe);
+  background: var(--primary); display: flex; z-index: 100;
+}
+.tab-bar-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; color: rgba(255,255,255,0.55); font-size: 10px;
+  cursor: pointer; gap: 2px; text-decoration: none;
+}
+.tab-bar-item.active { color: #fff; }
+.tab-bar-item svg { width: 22px; height: 22px; }
+
+/* ============ FLOW 2: ORDER CARD ============ */
+.orders-tabs {
+  display: flex; background: var(--white);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.orders-tabs .otab {
+  padding: 13px 16px; font-size: 12px; font-weight: 500;
+  color: var(--text-light); cursor: pointer; position: relative;
+  letter-spacing: 0.4px; text-transform: uppercase;
+}
+.orders-tabs .otab.active { color: var(--text-md); }
+.orders-tabs .otab.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--primary);
+}
+.time-group {
+  padding: 10px 16px 6px; font-size: 13px; color: var(--text-secondary);
+}
+
+/* Order card */
+.oc {
+  background: var(--white); margin: 0 0 1px;
+  padding: 14px 16px 0; cursor: pointer;
+  border-left: 3px solid var(--primary);
+  position: relative;
+}
+.oc:active { background: #FAFAFA; }
+.oc-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.oc-type { font-size: 17px; font-weight: 700; color: var(--text); }
+.oc-badge {
+  font-size: 12px; color: #888; border: 1px solid #CCC;
+  border-radius: 12px; padding: 2px 10px; white-space: nowrap;
+  flex-shrink: 0; margin-left: 10px; font-weight: 400;
+}
+.oc-ids {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: var(--text-light); margin-top: 6px;
+}
+.oc-sep { border: none; border-top: 1px solid var(--border-light); margin: 8px 0; }
+.oc-address { font-size: 14px; color: var(--text); line-height: 1.45; }
+.oc-client { font-size: 14px; color: var(--text-light); margin-top: 4px; }
+.oc-work { font-size: 15px; font-weight: 500; color: var(--text); margin-top: 10px; }
+.oc-status-row {
+  display: flex; align-items: center; margin-top: 8px; gap: 0;
+}
+.oc-status-text { font-size: 13px; color: var(--text-secondary); margin-right: 8px; }
+.sdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.sdot-gray { background: var(--status-gray); }
+.sdot-green { background: var(--status-green); }
+.sdot-red { background: var(--status-red); }
+.oc-refresh { margin-left: auto; color: var(--text-light); }
+.oc-refresh svg { width: 18px; height: 18px; }
+.oc-platform { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.oc-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; margin-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+.oc-more { color: var(--primary); font-size: 14px; font-weight: 500; letter-spacing: 0.3px; }
+.oc-actions { display: flex; align-items: center; gap: 16px; }
+.oc-actions svg { width: 22px; height: 22px; cursor: pointer; }
+.oc-tag {
+  display: inline-block; background: #E8F5F5; color: var(--primary);
+  padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 500;
+  margin-top: 8px;
+}
+
+/* ============ FLOW 3: DETAIL ============ */
+.db { background: var(--white); padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.db-time { font-size: 14px; color: #607D8B; }
+.db-title { font-size: 15px; font-weight: 400; color: var(--text); margin-top: 2px; }
+.db-id-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.db-id { font-size: 13px; color: var(--text-light); }
+.link-p { color: var(--primary); font-size: 14px; font-weight: 500; cursor: pointer; }
+.link-p-sm { color: var(--primary); font-size: 13px; font-weight: 400; cursor: pointer; }
+
+.db-table { }
+.db-tr { display: flex; align-items: baseline; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+.db-tr:last-child { border-bottom: none; }
+.db-tl { font-weight: 700; color: var(--text); min-width: 100px; }
+.db-tv { color: var(--text); }
+.db-tn { color: var(--text-light); margin-left: auto; font-size: 13px; }
+
+.db-work { font-size: 15px; font-weight: 500; color: var(--text); }
+.db-plat { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.db-plat-text { font-size: 14px; color: var(--text-secondary); }
+
+/* Equipment */
+.db-eq-hdr { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.db-eq-title { font-size: 15px; font-weight: 500; color: var(--text); }
+.db-eq-count { font-size: 15px; color: var(--text); font-weight: 400; margin-left: 6px; }
+.db-eq-chev { color: var(--primary); transition: transform 0.2s; }
+.db-eq-chev.open { transform: rotate(180deg); }
+
+.eq-list { margin-top: 10px; }
+.eq-item { display: flex; align-items: center; padding: 10px 0; gap: 12px; }
+.eq-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.eq-icon svg { width: 24px; height: 24px; }
+.eq-body { flex: 1; min-width: 0; }
+.eq-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.eq-sub { font-size: 13px; color: var(--text-light); margin-top: 1px; }
+
+/* Warranty badges */
+.warranty-badge {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 4px; font-size: 13px;
+  font-weight: 500; cursor: pointer; flex-shrink: 0; white-space: nowrap;
+}
+.warranty-bad {
+  background: #FDE8EC; color: var(--danger);
+}
+.warranty-good {
+  background: #E8F5E9; color: var(--success);
+}
+.warranty-badge svg { width: 14px; height: 14px; }
+
+/* Status & services */
+.db-stat { display: flex; justify-content: space-between; align-items: center; }
+.db-stat-left { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-secondary); }
+.db-services { color: var(--primary); font-size: 14px; margin-top: 8px; cursor: pointer; }
+
+/* Action tabs */
+.action-section { background: var(--border-light); padding: 14px 16px 0; }
+.action-tabs { display: flex; background: var(--white); border: 1px solid var(--border); }
+.atab {
+  flex: 1; text-align: center; padding: 12px 4px; font-size: 13px;
+  font-weight: 500; color: var(--text-light); cursor: pointer;
+  border-right: 1px solid var(--border); background: var(--white);
+  transition: all 0.15s; line-height: 1.2; position: relative;
+}
+.atab:last-child { border-right: none; }
+.atab.st-initial { color: var(--text-light); }
+.atab.st-active { background: var(--primary); color: #fff; }
+.atab.st-done { color: var(--text-secondary); }
+.atab.st-disabled { color: var(--text-disabled); }
+.atab .at-lbl { display: block; }
+.atab .at-tmr { display: block; font-size: 11px; font-weight: 400; opacity: 0.7; margin-top: 1px; }
+.transfer-link {
+  text-align: center; padding: 12px 16px; color: var(--primary);
+  font-size: 14px; cursor: pointer; background: var(--border-light);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Menu */
+.mi {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 16px; background: var(--white);
+  border-bottom: 1px solid var(--border); cursor: pointer; font-size: 15px;
+}
+.mi:active { background: #F8F8F8; }
+.mi.disabled { color: var(--text-disabled); pointer-events: none; }
+.mi .ch { color: var(--primary); font-size: 22px; line-height: 1; opacity: 0.6; }
+
+/* ============ COMMENTS ============ */
+.cm-add {
+  padding: 14px 16px; background: #F5F5F5;
+  border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.cm-add span { color: var(--primary); font-size: 15px; }
+.cm-entry { padding: 16px; }
+.cm-date { font-size: 14px; color: var(--text-light); }
+.cm-author { font-size: 14px; color: var(--text-light); margin-top: 1px; }
+.cm-text { font-size: 15px; color: var(--text); margin-top: 8px; line-height: 1.5; }
+.cm-modal {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4); z-index: 200; flex-direction: column; justify-content: flex-end;
+}
+.cm-modal.show { display: flex; }
+.cm-input-w {
+  width: 100%; max-width: 420px; margin: 0 auto;
+  background: var(--white); padding: 12px 16px;
+  display: flex; gap: 10px; align-items: flex-end;
+}
+.cm-input-w textarea {
+  flex: 1; border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px; font-size: 14px; resize: none; height: 56px;
+  font-family: inherit; outline: none;
+}
+.cm-input-w textarea:focus { border-color: var(--primary); }
+.cm-send {
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 6px; padding: 10px 16px; font-size: 14px; cursor: pointer; font-weight: 500;
+}
+
+/* ============ ABO ============ */
+.abo-pkg { padding: 14px 16px; background: var(--white); font-size: 15px; color: var(--text); border-bottom: 1px solid var(--border); }
+
+.abo-card {
+  background: var(--white); margin: 8px 16px; border: 1px solid var(--border);
+  border-radius: 6px; overflow: hidden;
+}
+.abo-card-body { padding: 14px 16px; }
+.abo-card-footer {
+  padding: 10px 16px; border-top: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.abo-plan-r { display: flex; justify-content: space-between; align-items: flex-start; }
+.abo-speed { font-size: 17px; font-weight: 500; color: var(--text); }
+.abo-speed-s { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+.abo-speed-s svg { width: 16px; height: 16px; }
+.abo-price { font-size: 14px; color: var(--text-secondary); }
+.abo-conn {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #05AF11; font-size: 12px; font-weight: 500; letter-spacing: 0.3px;
+}
+.abo-conn svg { width: 18px; height: 18px; }
+
+.abo-sec-label {
+  padding: 16px 16px 8px; font-size: 15px; font-weight: 700; color: var(--text);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.abo-sec-add { color: var(--primary); font-size: 14px; font-weight: 400; cursor: pointer; }
+
+.abo-eq-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.abo-eq-t { font-size: 15px; font-weight: 700; color: var(--text); }
+.abo-eq-x { color: var(--text-light); cursor: pointer; font-size: 20px; line-height: 1; }
+.abo-eq-m { font-size: 13px; color: var(--text); margin-top: 4px; }
+.abo-eq-s { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.abo-eq-st { font-size: 14px; color: var(--text); margin-top: 10px; }
+.abo-eq-lk { color: var(--primary); font-size: 13px; font-weight: 500; cursor: pointer; letter-spacing: 0.2px; }
+.abo-eq-inst { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.abo-eq-il { font-size: 14px; color: var(--text-secondary); }
+.abo-eq-ip { font-size: 14px; font-weight: 700; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; padding: 8px 20px; border-radius: 20px;
+  font-size: 13px; z-index: 300; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+/* ============ SHIFT SCREEN ============ */
+.shift-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 16px 12px; background: var(--white);
+  border-bottom: 1px solid var(--border);
+}
+.shift-title { font-size: 19px; font-weight: 700; color: var(--text); }
+.shift-bell {
+  position: relative; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--primary); cursor: pointer;
+}
+.shift-bell svg { width: 24px; height: 24px; }
+.shift-bell-badge {
+  position: absolute; top: -2px; right: -4px;
+  background: var(--primary); color: #fff;
+  font-size: 9px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px;
+}
+
+.shift-section {
+  background: var(--white); margin-top: 8px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+}
+.shift-section-title {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  margin-bottom: 10px;
+}
+.shift-links {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.shift-link { color: var(--primary); font-size: 14px; cursor: pointer; }
+
+.shift-meta {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 12px;
+}
+.shift-meta-item { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+
+.shift-timer {
+  text-align: center; padding: 8px 0 12px;
+  font-size: 36px; font-weight: 700; color: var(--text);
+  letter-spacing: 1px;
+}
+
+.shift-actions {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.shift-action-link {
+  color: var(--primary); font-size: 14px; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.3px;
+}
+
+.shift-start-wrap {
+  padding: 24px 16px; text-align: center;
+}
+.shift-start-btn {
+  width: 100%; padding: 14px;
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 4px; font-size: 15px; font-weight: 500;
+  letter-spacing: 0.3px; cursor: pointer; font-family: inherit;
+}
+
+.shift-alert {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; background: var(--white);
+  margin-top: 8px; border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.shift-alert-icon {
+  width: 22px; height: 22px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.shift-alert-text { flex: 1; color: var(--primary); font-size: 14px; }
+.shift-alert-chev { color: var(--primary); font-size: 18px; }
+
+.shift-orders-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4px 16px; margin-bottom: 12px;
+}
+.shift-order-slot { font-size: 14px; color: var(--text); padding: 2px 0; }
+.shift-order-slot span { font-weight: 700; margin-left: 6px; }
+
+.shift-orders-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 8px;
+}
+.shift-orders-done { font-size: 14px; color: var(--text-secondary); }
+.shift-orders-done b { font-weight: 700; color: var(--text); }
+
+.shift-eq-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+.shift-eq-item { }
+.shift-eq-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 14px; color: var(--text);
+}
+.shift-eq-row span:last-child { font-weight: 700; }
+.shift-eq-sub { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+
+/* ============ LIMIT ALERT BANNER ============ */
+.limit-banner {
+  display: none; margin: 12px 16px 0;
+  padding: 16px; background: #FFF8E1;
+  border: 1px solid #FFE082; border-radius: 6px;
+  align-items: flex-start; gap: 12px;
+}
+.limit-banner.show { display: flex; }
+.limit-banner-icon {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.limit-banner-icon svg { width: 22px; height: 22px; }
+.limit-banner-text {
+  font-size: 14px; color: var(--text); line-height: 1.5; flex: 1;
+}
+
+/* Disabled select */
+.add-eq-select.disabled {
+  color: var(--text-disabled); pointer-events: none;
+}
+
+/* ============ SNACKBAR ============ */
+.snackbar {
+  position: fixed; bottom: calc(var(--tab-bar-h) + var(--bottom-safe) + 8px);
+  left: 8px; right: 8px; max-width: 404px; margin: 0 auto;
+  background: #333; color: #fff; border-radius: 6px;
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; z-index: 310;
+  transform: translateY(100px); opacity: 0;
+  transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+}
+.snackbar.show {
+  transform: translateY(0); opacity: 1;
+}
+.snackbar-text {
+  font-size: 14px; line-height: 1.4; flex: 1;
+}
+.snackbar-timer {
+  font-size: 13px; color: rgba(255,255,255,0.6);
+  flex-shrink: 0; min-width: 20px; text-align: center;
+}
+.snackbar-undo {
+  color: var(--primary); font-size: 14px; font-weight: 500;
+  cursor: pointer; flex-shrink: 0;
+  letter-spacing: 0.3px; text-transform: uppercase;
+  background: none; border: none; padding: 4px 0;
+}
+
+/* Animations */
+.slide-in { animation: slideIn 0.22s ease-out forwards; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.slide-out { animation: slideOut 0.22s ease-in forwards; }
+@keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(100%); } }
+
+/* ============ BOTTOM SHEET ============ */
+.bottom-sheet-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4); z-index: 200;
+}
+.bottom-sheet-overlay.show { display: block; }
+.bottom-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  max-width: 420px; margin: 0 auto;
+  background: var(--white); z-index: 201;
+  border-radius: 12px 12px 0 0;
+  transform: translateY(100%); transition: transform 0.25s ease-out;
+  padding-bottom: var(--bottom-safe);
+}
+.bottom-sheet.show { transform: translateY(0); }
+.bs-title {
+  padding: 20px 16px 12px; font-size: 16px; color: var(--text-light);
+}
+.bs-option {
+  padding: 14px 16px; font-size: 15px; color: var(--primary);
+  cursor: pointer; border-top: 1px solid var(--border-light);
+}
+.bs-option:active { background: #F8F8F8; }
+.bs-option.danger { color: var(--danger); }
+.bs-option.disabled { color: var(--text-disabled); pointer-events: none; }
+.bs-cancel {
+  padding: 14px 16px; font-size: 15px; color: var(--text-light);
+  cursor: pointer; border-top: 1px solid var(--border);
+}
+
+/* ============ ALERT DIALOG ============ */
+.alert-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 250;
+  justify-content: center; align-items: center;
+}
+.alert-overlay.show { display: flex; }
+.alert-dialog {
+  background: var(--white); border-radius: 4px;
+  width: 280px; max-width: 90%;
+  padding: 24px 24px 8px;
+}
+.alert-title {
+  font-size: 18px; font-weight: 500; color: var(--text);
+  margin-bottom: 12px;
+}
+.alert-body {
+  font-size: 14px; color: var(--text-secondary);
+  line-height: 1.5; margin-bottom: 16px;
+}
+.alert-actions {
+  display: flex; justify-content: flex-end; padding-bottom: 8px;
+}
+.alert-btn {
+  background: none; border: none; color: var(--primary);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+
+/* ============ ABO EQUIPMENT STATES ============ */
+.abo-card.marked-delete {
+  opacity: 0.55;
+}
+.abo-card.marked-delete .abo-eq-x { display: none; }
+.abo-eq-undo {
+  color: var(--primary); font-size: 13px; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.2px; text-transform: uppercase;
+}
+.abo-eq-registered {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--primary); font-size: 13px; font-weight: 500;
+}
+.abo-eq-registered svg { width: 18px; height: 18px; }
+
+/* ============ ADD EQUIPMENT SCREEN ============ */
+.add-eq-tabs {
+  display: flex; background: var(--white);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.add-eq-tabs .aeq-tab {
+  flex: 1; text-align: center;
+  padding: 14px 16px; font-size: 14px; font-weight: 500;
+  color: var(--text-light); cursor: pointer; position: relative;
+}
+.add-eq-tabs .aeq-tab.active { color: var(--primary); }
+.add-eq-tabs .aeq-tab.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--primary);
+}
+
+.add-eq-card {
+  background: var(--white); margin: 12px 16px; border: 1px solid var(--border);
+  border-radius: 6px; overflow: hidden;
+}
+.add-eq-card-body { padding: 16px; }
+.add-eq-card-title { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.4; }
+.add-eq-card-model { font-size: 13px; color: var(--text); margin-top: 4px; }
+.add-eq-card-serial { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.add-eq-card-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 12px; font-size: 14px;
+}
+.add-eq-card-label { color: var(--text-secondary); }
+.add-eq-card-price { font-size: 14px; font-weight: 700; color: var(--text); }
+.add-eq-card-footer {
+  padding: 10px 16px; border-top: 1px solid var(--border-light);
+}
+.add-eq-select {
+  color: var(--primary); font-size: 13px; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.2px;
+}
+.add-eq-selected {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--primary); font-size: 13px; font-weight: 500;
+}
+.add-eq-selected svg { width: 18px; height: 18px; }
+
+.add-eq-save {
+  position: absolute; bottom: calc(var(--tab-bar-h) + var(--bottom-safe) + 16px);
+  left: 16px; right: 16px;
+  padding: 14px; text-align: center;
+  background: var(--text-disabled); color: var(--white);
+  border: none; border-radius: 4px;
+  font-size: 15px; font-weight: 500; letter-spacing: 0.3px;
+  cursor: default; font-family: inherit;
+  transition: background 0.2s;
+}
+.add-eq-save.active {
+  background: var(--primary); cursor: pointer;
+}
+
+/* ============ REGISTER SCREEN ============ */
+.reg-input-wrap {
+  background: var(--white); margin: 12px 16px;
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+}
+.reg-input-wrap.focused { border-color: var(--primary); }
+.reg-input-inner { flex: 1; }
+.reg-input-label {
+  font-size: 12px; color: var(--text-light); margin-bottom: 2px;
+}
+.reg-input {
+  width: 100%; border: none; outline: none;
+  font-size: 15px; color: var(--text); font-family: inherit;
+  background: transparent;
+}
+.reg-input::placeholder { color: var(--text-disabled); }
+.reg-barcode {
+  width: 28px; height: 28px; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; flex-shrink: 0;
+  color: var(--primary);
+}
+.reg-barcode svg { width: 24px; height: 24px; }
+.reg-help {
+  padding: 8px 16px; color: var(--primary); font-size: 13px;
+  font-weight: 500; cursor: pointer; letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+.reg-save {
+  position: absolute; bottom: calc(var(--tab-bar-h) + var(--bottom-safe) + 16px);
+  left: 16px; right: 16px;
+  padding: 14px; text-align: center;
+  background: var(--text-disabled); color: var(--white);
+  border: none; border-radius: 4px;
+  font-size: 15px; font-weight: 500; letter-spacing: 0.3px;
+  cursor: default; font-family: inherit;
+  transition: background 0.2s;
+}
+.reg-save.active {
+  background: var(--primary); cursor: pointer;
+}
+
+/* ============ ABO SUMMARY (final) ============ */
+.abo-summary {
+  background: var(--white); margin: 0; padding: 16px;
+  border-top: 1px solid var(--border);
+}
+.abo-sum-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; font-size: 14px;
+}
+.abo-sum-row.total {
+  font-weight: 700; font-size: 15px; padding-top: 10px;
+  border-top: 1px solid var(--border-light); margin-top: 4px;
+}
+.abo-activate {
+  margin: 16px 16px; padding: 14px; text-align: center;
+  background: var(--primary); color: var(--white);
+  border: none; border-radius: 4px;
+  font-size: 15px; font-weight: 500; letter-spacing: 0.3px;
+  cursor: pointer; font-family: inherit; width: calc(100% - 32px);
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- ==================== FLOW 1: SHIFT ==================== -->
+<div class="screen active" id="screen-shift">
+  <div class="shift-header">
+    <div class="shift-title">Смена 11.06.2026</div>
+    <div class="shift-bell" onclick="showToast('Уведомления')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <div class="shift-bell-badge">46</div>
+    </div>
+  </div>
+  <div class="screen-body">
+
+    <!-- Before start -->
+    <div id="shift-before">
+      <div class="shift-section">
+        <div class="shift-section-title">Участок 16.1</div>
+        <div class="shift-links">
+          <span class="shift-link" onclick="showToast('Состав бригады')">Состав бригады</span>
+          <span class="shift-link" onclick="showToast('Диспетчеры участка')">Диспетчеры участка</span>
+        </div>
+      </div>
+      <div class="shift-start-wrap">
+        <button class="shift-start-btn" onclick="startShift()">НАЧАТЬ</button>
+      </div>
+    </div>
+
+    <!-- After start -->
+    <div id="shift-after" style="display:none">
+      <div class="shift-section">
+        <div class="shift-section-title">Участок 16.1</div>
+        <div class="shift-links">
+          <span class="shift-link" onclick="showToast('Состав бригады')">Состав бригады</span>
+          <span class="shift-link" onclick="showToast('Диспетчеры участка')">Диспетчеры участка</span>
+        </div>
+        <div class="shift-meta">
+          <div class="shift-meta-item">Смена начата<br>в <span id="shift-start-time">—</span></div>
+          <div class="shift-meta-item" style="text-align:right">Время перерывов<br>0ч 00мин</div>
+        </div>
+        <div class="shift-timer" id="shift-timer-display">0 ч 00 мин</div>
+        <div class="shift-actions">
+          <span class="shift-action-link" onclick="showToast('Смена завершена')">ЗАВЕРШИТЬ СМЕНУ</span>
+          <span class="shift-action-link" onclick="showToast('Перерыв')">ПЕРЕРЫВ</span>
+        </div>
+      </div>
+
+      <div class="shift-alert" onclick="showToast('Глобальные проблемы на участке')">
+        <div class="shift-alert-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L1 21h22L12 2z" fill="#FFA726" stroke="#F57C00" stroke-width="1"/><text x="12" y="18" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">!</text></svg>
+        </div>
+        <span class="shift-alert-text">Глобальные проблемы на участке</span>
+        <span class="shift-alert-chev">&rsaquo;</span>
+      </div>
+
+      <div class="shift-section">
+        <div class="shift-section-title">Заявок на сегодня — 3 (0 глобальных)</div>
+        <div class="shift-orders-grid">
+          <div class="shift-order-slot">14:00 - 16:00<span>1</span></div>
+          <div class="shift-order-slot">16:00 - 18:00<span>1</span></div>
+          <div class="shift-order-slot">18:00 - 20:00<span>1</span></div>
+        </div>
+        <div class="shift-orders-footer">
+          <div class="shift-orders-done">Завершено <b>0 из 3</b></div>
+          <span class="shift-link" onclick="switchTab('orders')">Перейти к заявкам</span>
+        </div>
+      </div>
+
+      <div class="shift-section" style="margin-bottom:16px">
+        <div class="shift-section-title">Оборудование на сегодня</div>
+        <div class="shift-eq-grid">
+          <div class="shift-eq-item">
+            <div class="shift-eq-row"><span>IPTV приставки</span><span>0</span></div>
+            <div class="shift-eq-sub">Выдано 0</div>
+          </div>
+          <div class="shift-eq-item">
+            <div class="shift-eq-row"><span>SIM карта</span><span>1</span></div>
+            <div class="shift-eq-sub">Выдано 0</div>
+          </div>
+          <div class="shift-eq-item">
+            <div class="shift-eq-row"><span>TVE приставки</span><span>0</span></div>
+            <div class="shift-eq-sub">Выдано 0</div>
+          </div>
+          <div class="shift-eq-item">
+            <div class="shift-eq-row"><span>Роутеры</span><span>0</span></div>
+            <div class="shift-eq-sub">Выдано 0</div>
+          </div>
+          <div class="shift-eq-item">
+            <div class="shift-eq-row"><span>Колонки</span><span>0</span></div>
+            <div class="shift-eq-sub">Выдано 0</div>
+          </div>
+          <div class="shift-eq-item">
+            <div class="shift-eq-row"><span>Видеокамеры</span><span>0</span></div>
+            <div class="shift-eq-sub">Выдано 0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FLOW 2: ORDERS ==================== -->
+<div class="screen" id="screen-orders">
+  <div class="status-bar">
+    <div class="sb-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M2 22h20V2z" opacity=".3"/><path d="M2 22h20V2L2 22zm18-2H6.83L20 6.83V20z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.34C7 21.4 7.6 22 8.33 22h7.34c.73 0 1.33-.6 1.33-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+    <span>12:30</span>
+  </div>
+  <div class="orders-tabs">
+    <div class="otab active" id="tab-orders" onclick="switchOrderTab('my')">МОИ ЗАЯВКИ (1)</div>
+    <div class="otab" id="tab-basket" onclick="switchOrderTab('basket')">КОРЗИНА (0)</div>
+  </div>
+  <div class="screen-body">
+    <div id="orders-my">
+
+      <!-- Card 1 -->
+      <div class="time-group">Сегодня &nbsp;&nbsp; 14:00 — 16:00</div>
+      <div class="oc" onclick="openDetail()">
+        <div class="oc-top">
+          <span class="oc-type">Локальная заявка</span>
+          <span class="oc-badge">В графике</span>
+        </div>
+        <div class="oc-ids">
+          <span>№168969928</span>
+          <span>CTN 9647696840</span>
+        </div>
+        <hr class="oc-sep">
+        <div class="oc-address">Алексеевский р-н<br>Москва, Новоалексеевская ул., д.5, к.1, кв 64</div>
+        <div class="oc-client">Романов Алексей Викторович</div>
+        <div class="oc-work">ТВ. Замена приставки техником</div>
+        <div class="oc-status-row">
+          <span class="oc-status-text">Статус на 13:41</span>
+          <span class="sdot sdot-gray"></span>
+          <span class="sdot sdot-green"></span>
+          <span class="sdot sdot-red"></span>
+          <span class="oc-refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          </span>
+        </div>
+        <div class="oc-platform">ТВ платформа: не известно</div>
+        <div class="oc-bottom">
+          <span class="oc-more">ПОДРОБНЕЕ</span>
+          <div class="oc-actions">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="#009DA5" stroke-width="1.8"/><circle cx="12" cy="10" r="3" fill="#009DA5"/></svg>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#009DA5" stroke-width="1.8"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="time-group">Сегодня &nbsp;&nbsp; 16:00 — 18:00</div>
+      <div class="oc" onclick="openDetailSimple()">
+        <div class="oc-top">
+          <span class="oc-type">Локальная заявка</span>
+          <span class="oc-badge">В графике</span>
+        </div>
+        <div class="oc-ids">
+          <span>№241259912</span>
+          <span>CTN 9217696035</span>
+        </div>
+        <hr class="oc-sep">
+        <div class="oc-address">Марфино<br>Москва, Ботаническая ул., д.14, к.2, кв 31</div>
+        <div class="oc-client">Сироткин Владимир Фёдорович</div>
+        <div class="oc-work">Нет линка</div>
+        <div class="oc-status-row">
+          <span class="oc-status-text">Статус на 13:41</span>
+          <span class="sdot sdot-green"></span>
+          <span class="sdot sdot-green"></span>
+          <span class="oc-refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          </span>
+        </div>
+        <div class="oc-platform">ТВ платформа: не известно</div>
+        <div class="oc-bottom">
+          <span class="oc-more">ПОДРОБНЕЕ</span>
+          <div class="oc-actions">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="#009DA5" stroke-width="1.8"/><circle cx="12" cy="10" r="3" fill="#009DA5"/></svg>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#009DA5" stroke-width="1.8"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="time-group">Сегодня &nbsp;&nbsp; 18:00 — 20:00</div>
+      <div class="oc" onclick="openDetailSimple()">
+        <div class="oc-top">
+          <span class="oc-type">Подключение</span>
+          <span class="oc-badge">В графике</span>
+        </div>
+        <div class="oc-ids">
+          <span>Подключение №339871204</span>
+          <span>CTN 9031548276</span>
+        </div>
+        <hr class="oc-sep">
+        <div class="oc-address">Останкинский р-н<br>Москва, ул. Академика Королёва, д.8, к.1, кв 112</div>
+        <div class="oc-client">Воробьёва Валентина Петровна</div>
+        <div class="oc-tag">FTT</div>
+        <div class="oc-status-row">
+          <span class="oc-status-text">Статус на 13:41</span>
+          <span class="sdot sdot-gray"></span>
+          <span class="oc-refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          </span>
+        </div>
+        <div class="oc-bottom">
+          <span class="oc-more">ПОДРОБНЕЕ</span>
+          <div class="oc-actions">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="#009DA5" stroke-width="1.8"/><circle cx="12" cy="10" r="3" fill="#009DA5"/></svg>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#009DA5" stroke-width="1.8"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Basket -->
+    <div id="orders-basket" style="display:none">
+      <div style="padding:40px 16px;text-align:center;color:var(--text-light);font-size:14px">Нет доступных заявок</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FLOW 3-6: DETAIL ==================== -->
+<div class="screen" id="screen-detail">
+  <div class="status-bar"><div class="sb-icons"><svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z" fill="#fff"/></svg><svg viewBox="0 0 24 24"><path d="M2 22h20V2z" opacity=".3" fill="#fff"/><path d="M2 22h20V2L2 22zm18-2H6.83L20 6.83V20z" fill="#fff"/></svg><svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.34C7 21.4 7.6 22 8.33 22h7.34c.73 0 1.33-.6 1.33-1.33V5.33C17 4.6 16.4 4 15.67 4z" fill="#fff"/></svg></div><span>12:30</span></div>
+  <div class="header-teal">
+    <button class="back-btn" onclick="goBack('screen-orders')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <span>Локальная заявка</span>
+  </div>
+  <div class="screen-body">
+    <div class="db">
+      <div class="db-time">10:00 – 12:00</div>
+      <div class="db-title">Локальная заявка</div>
+      <div class="db-id-row">
+        <span class="db-id">№168969928</span>
+        <span class="link-p" id="toggle-det" onclick="toggleDet()">Скрыть</span>
+      </div>
+    </div>
+    <div class="db" id="det-info">
+      <div class="db-table">
+        <div class="db-tr"><span class="db-tl">№ договора</span><span class="db-tv">34678956</span><span class="db-tn">от 15.03.2025</span></div>
+        <div class="db-tr"><span class="db-tl">CTN</span><span class="db-tv">9647696840</span></div>
+        <div class="db-tr"><span class="db-tl">Логин</span><span class="db-tv">Evrostandart</span></div>
+      </div>
+    </div>
+    <div class="db">
+      <div class="db-work">ТВ. Другие ошибки IPTV</div>
+      <div class="db-plat">
+        <span class="db-plat-text">ТВ платформа: неизвестно</span>
+        <span class="link-p">Определить</span>
+      </div>
+    </div>
+    <div class="db">
+      <div class="db-eq-hdr" onclick="toggleEq()">
+        <div>
+          <span class="db-eq-title">Оборудование клиента</span>
+          <span class="db-eq-count">3</span>
+        </div>
+        <svg class="db-eq-chev" id="eq-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div id="eq-list" class="eq-list" style="display:none">
+        <!-- STB -->
+        <div class="eq-item">
+          <div class="eq-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6.9 6.56h10.2L19.27 11.06H4.73L6.9 6.56z" fill="none" stroke="#838A8B" stroke-width="1.1"/><rect x="4.13" y="12.19" width="15.75" height="5.63" rx="0.5" stroke="#838A8B" stroke-width="1.1" fill="#fff"/><circle cx="12" cy="15" r="1.1" fill="#838A8B"/><rect x="6.38" y="14.44" width="3.38" height="1.13" fill="#838A8B"/><rect x="14.25" y="14.44" width="3.38" height="1.13" fill="#838A8B"/></svg>
+          </div>
+          <div class="eq-body">
+            <div class="eq-name">STB android_stb AO-H821</div>
+            <div class="eq-sub">Своё оборудование</div>
+          </div>
+        </div>
+        <!-- Router -->
+        <div class="eq-item">
+          <div class="eq-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M18.75 11.5H16.5V8.13h-1.13v3.37H5.25A2.25 2.25 0 003 13.75v3.38a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 17.13v-3.38a2.25 2.25 0 00-2.25-2.25zm-13.5 1.13h13.5c.62 0 1.13.5 1.13 1.12v3.38c0 .62-.5 1.12-1.13 1.12H5.25a1.13 1.13 0 01-1.13-1.12v-3.38c0-.62.51-1.12 1.13-1.12z" fill="#E63956"/><rect x="6.38" y="16" width="1.13" height="1.13" fill="#E63956"/><rect x="8.63" y="16" width="1.13" height="1.13" fill="#E63956"/><rect x="10.88" y="16" width="1.13" height="1.13" fill="#E63956"/><path d="M21 5.13a10.61 10.61 0 00-10.12 0l.81.81a9.42 9.42 0 018.5 0L21 5.13z" fill="#E63956"/><path d="M15.94 5.34a7.27 7.27 0 00-7.88 1.42l.81.81a6.08 6.08 0 016.26-1.42l.81-.81z" fill="#E63956"/></svg>
+          </div>
+          <div class="eq-body">
+            <div class="eq-name">HUAWEI AX3S</div>
+            <div class="eq-sub">Выкуплено</div>
+          </div>
+          <div class="warranty-badge warranty-bad" onclick="showToast('Гарантия недоступна')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            Гарантия
+          </div>
+        </div>
+        <!-- Popcorn ENT -->
+        <div class="eq-item">
+          <div class="eq-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M20.98 13.87L18.89 7.58a2.25 2.25 0 00-2.19-1.58H7.31a2.25 2.25 0 00-2.19 1.58L2.98 14.08" stroke="#E63956" stroke-width="1.15"/><rect x="2.93" y="12.29" width="18.15" height="5.71" rx="2.3" stroke="#E63956" stroke-width="1.15" fill="#fff"/><circle cx="18.49" cy="15.14" r=".85" stroke="#E63956" stroke-width=".46" fill="#fff"/><text x="4.93" y="16.2" fill="#E63956" font-size="2.8" font-weight="700" font-family="Roboto,sans-serif">ENT</text></svg>
+          </div>
+          <div class="eq-body">
+            <div class="eq-name">Попкорн AO-H8</div>
+            <div class="eq-sub">В рассрочке</div>
+          </div>
+          <div class="warranty-badge warranty-good" onclick="showToast('Гарантия активна')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            Гарантия
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="db">
+      <div class="db-stat">
+        <div class="db-stat-left">
+          Статус на 10:02
+          <span class="sdot sdot-gray"></span>
+          <span class="sdot" style="background:var(--primary)"></span>
+          <span class="sdot" style="background:var(--primary)"></span>
+        </div>
+        <span class="link-p">Подробнее</span>
+      </div>
+      <div class="db-services">Сервисы</div>
+    </div>
+
+    <div class="action-section">
+      <div class="action-tabs" id="act-tabs">
+        <div class="atab st-initial" id="at-path" onclick="doAction('path')">
+          <span class="at-lbl" id="at-path-lbl">В ПУТЬ</span>
+          <span class="at-tmr" id="tmr-path"></span>
+        </div>
+        <div class="atab" id="at-work" onclick="doAction('work')">
+          <span class="at-lbl">В РАБОТУ</span>
+          <span class="at-tmr" id="tmr-work"></span>
+        </div>
+        <div class="atab st-disabled" id="at-fin" onclick="doAction('finish')">
+          <span class="at-lbl">ЗАВЕРШИТЬ</span>
+        </div>
+      </div>
+    </div>
+    <div class="transfer-link">Перенести или отменить</div>
+
+    <div class="mi" onclick="showToast('Написать в поддержку')"><span>Написать в поддержку</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi" onclick="navigateTo('screen-comments')"><span>Комментарии</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi disabled" id="m-abo" onclick="navigateTo('screen-abo')"><span>Действия с АБО</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi disabled" id="m-stv" onclick="showToast('Подключить SmartTV')"><span>Подключить SmartTV</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi disabled" id="m-chk" onclick="showToast('Заполнить чек-лист')"><span>Заполнить чек-лист</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi" onclick="showToast('Временный пароль ЛК')"><span>Временный пароль ЛК</span><span class="ch">&rsaquo;</span></div>
+  </div>
+</div>
+
+<!-- ==================== FLOW 3.1: COMMENTS ==================== -->
+<div class="screen" id="screen-comments">
+  <div class="status-bar"><div class="sb-icons"><svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z" fill="#fff"/></svg><svg viewBox="0 0 24 24"><path d="M2 22h20V2z" opacity=".3" fill="#fff"/><path d="M2 22h20V2L2 22zm18-2H6.83L20 6.83V20z" fill="#fff"/></svg><svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.34C7 21.4 7.6 22 8.33 22h7.34c.73 0 1.33-.6 1.33-1.33V5.33C17 4.6 16.4 4 15.67 4z" fill="#fff"/></svg></div><span>12:30</span></div>
+  <div class="header-white">
+    <button class="back-btn" onclick="goBack('screen-detail')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <span>Комментарии к заявке</span>
+  </div>
+  <div class="screen-body" style="background:var(--white)">
+    <div class="cm-add" onclick="openCm()"><span>Добавить комментарий</span></div>
+    <div id="cm-list">
+      <div class="cm-entry"><div class="cm-date">10.06.2026 23:01</div><div class="cm-author">Auto</div><div class="cm-text">Заявка подтверждена и назначена в график на 11.06.2026 14:00 - 16:00 Алексеевский р-н, Новоалексеевская ул., д.5, к.1, кв 64, подъезд 2, этаж 5, домофон 64</div></div>
+      <div class="cm-entry"><div class="cm-date">10.06.2026 14:12</div><div class="cm-author">operator_kseniya</div><div class="cm-text">Клиент обратился: роутер не включается, индикаторы не горят. Просит выезд техника.</div></div>
+      <div class="cm-entry"><div class="cm-date">09.06.2026 13:28</div><div class="cm-author">aivolkova</div><div class="cm-text">К заявке добавлен контактный телефон 99902102</div></div>
+    </div>
+  </div>
+</div>
+<div class="cm-modal" id="cm-modal" onclick="closeCm(event)">
+  <div class="cm-input-w" onclick="event.stopPropagation()">
+    <textarea id="cm-ta" placeholder="Напишите комментарий..."></textarea>
+    <button class="cm-send" onclick="addCm()">OK</button>
+  </div>
+</div>
+
+<!-- ==================== FLOW 7: ABO ==================== -->
+<div class="screen" id="screen-abo">
+  <div class="status-bar"><div class="sb-icons"><svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z" fill="#fff"/></svg><svg viewBox="0 0 24 24"><path d="M2 22h20V2z" opacity=".3" fill="#fff"/><path d="M2 22h20V2L2 22zm18-2H6.83L20 6.83V20z" fill="#fff"/></svg><svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.34C7 21.4 7.6 22 8.33 22h7.34c.73 0 1.33-.6 1.33-1.33V5.33C17 4.6 16.4 4 15.67 4z" fill="#fff"/></svg></div><span>12:30</span></div>
+  <div class="header-white">
+    <button class="back-btn" onclick="goBackAbo()"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <span>Действия с АБО</span>
+  </div>
+  <div class="screen-body" id="abo-body">
+    <!-- Package name -->
+    <div class="abo-pkg">Пакет &laquo;Для дома 100 с ТВ IPTV&raquo;</div>
+
+    <!-- Internet plan card -->
+    <div class="abo-card" style="margin-top:10px">
+      <div class="abo-card-body">
+        <div class="abo-plan-r">
+          <div>
+            <div class="abo-speed">100 Мбит/с</div>
+            <div class="abo-speed-s">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 1.5"/></svg>
+              60 Мбит/с
+            </div>
+          </div>
+          <div class="abo-price">520,0 &#8381;/мес</div>
+        </div>
+      </div>
+      <div class="abo-card-footer">
+        <div class="abo-conn">
+          <svg viewBox="0 0 23.13 20" width="18" height="16"><path d="M12.62 0C18.42 0 23.13 4.48 23.13 10S18.42 20 12.62 20c-3.89 0-7.29-2.01-9.1-4.99h2.54c1.54 1.83 3.91 2.99 6.57 2.99 4.64 0 8.41-3.58 8.41-8s-3.77-8-8.41-8c-3.11 0-5.83 1.61-7.29 4H2.98C4.6 2.47 8.3 0 12.62 0zM6.31 12h1.49c.81 1.77 2.66 3 4.82 3 2.9 0 5.26-2.24 5.26-5s-2.35-5-5.26-5c-2.54 0-4.66 1.72-5.15 4H0v3h6.31z" fill="#05AF11" fill-rule="evenodd"/></svg>
+          ПОДКЛЮЧЕНО
+        </div>
+      </div>
+    </div>
+
+    <!-- TV plan card -->
+    <div class="abo-card">
+      <div class="abo-card-body">
+        <div class="abo-plan-r">
+          <div><span style="font-weight:500;font-size:15px">Комфортный</span></div>
+          <div class="abo-price">360,0 &#8381;/мес</div>
+        </div>
+      </div>
+      <div class="abo-card-footer">
+        <div class="abo-conn">
+          <svg viewBox="0 0 23.13 20" width="18" height="16"><path d="M12.62 0C18.42 0 23.13 4.48 23.13 10S18.42 20 12.62 20c-3.89 0-7.29-2.01-9.1-4.99h2.54c1.54 1.83 3.91 2.99 6.57 2.99 4.64 0 8.41-3.58 8.41-8s-3.77-8-8.41-8c-3.11 0-5.83 1.61-7.29 4H2.98C4.6 2.47 8.3 0 12.62 0zM6.31 12h1.49c.81 1.77 2.66 3 4.82 3 2.9 0 5.26-2.24 5.26-5s-2.35-5-5.26-5c-2.54 0-4.66 1.72-5.15 4H0v3h6.31z" fill="#05AF11" fill-rule="evenodd"/></svg>
+          ПОДКЛЮЧЕНО
+        </div>
+      </div>
+    </div>
+
+    <!-- Main equipment section -->
+    <div class="abo-sec-label">
+      <span>Основное оборудование</span>
+      <span class="abo-sec-add" onclick="onAddEquipment()">Добавить</span>
+    </div>
+
+    <!-- Equipment 1: Приставка TVE -->
+    <div class="abo-card" id="eq-card-stb">
+      <div class="abo-card-body">
+        <div class="abo-eq-top">
+          <span class="abo-eq-t">Приставка TVE</span>
+        </div>
+        <div class="abo-eq-m">STB android_stb AO-H821</div>
+        <div class="abo-eq-s">VIMPELCOM_Swg201B_00030094_2412</div>
+        <div class="abo-eq-st">Своё оборудование</div>
+      </div>
+      <div class="abo-card-footer" id="eq-card-stb-footer">
+        <span class="abo-eq-lk">ИЗМЕНИТЬ</span>
+      </div>
+    </div>
+
+    <!-- Equipment 2: wi-fi роутер -->
+    <div class="abo-card" id="eq-card-router">
+      <div class="abo-card-body">
+        <div class="abo-eq-top">
+          <span class="abo-eq-t" id="router-title">wi-fi роутер</span>
+        </div>
+        <div class="abo-eq-m" id="router-model">HUAWEI AX3S</div>
+        <div class="abo-eq-s" id="router-serial">RX2553F14432</div>
+        <div class="abo-eq-st" id="router-status">Выкуплено</div>
+        <div id="router-extra"></div>
+      </div>
+      <div class="abo-card-footer" id="eq-card-router-footer">
+        <span class="abo-eq-lk" onclick="openEditRouter()">ИЗМЕНИТЬ</span>
+        <div class="warranty-badge warranty-bad" onclick="showToast('Гарантия недоступна')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          Гарантия
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional equipment section -->
+    <div class="abo-sec-label">
+      <span>Дополнительное оборудование</span>
+    </div>
+
+    <!-- Equipment 3: Приставка ENT -->
+    <div class="abo-card" id="eq-card-ent" style="margin-bottom:16px">
+      <div class="abo-card-body">
+        <div class="abo-eq-top">
+          <span class="abo-eq-t">Приставка ENT рассрочка 36 месяцев</span>
+        </div>
+        <div class="abo-eq-m">JUNIOR 2O-H10</div>
+        <div class="abo-eq-s">VMPJUN002412</div>
+        <div class="abo-eq-inst">
+          <span class="abo-eq-il">В рассрочке</span>
+          <span class="abo-eq-ip">165,0 &#8381;/мес</span>
+        </div>
+      </div>
+      <div class="abo-card-footer">
+        <span class="abo-eq-lk">ИЗМЕНИТЬ</span>
+        <div class="warranty-badge warranty-good" onclick="showToast('Гарантия активна')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>
+          Гарантия
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary (hidden until activate state) -->
+    <div id="abo-summary-section" style="display:none">
+      <div class="abo-summary" id="abo-summary-content"></div>
+      <button class="abo-activate" onclick="showToast('Заказ активирован')">АКТИВИРОВАТЬ</button>
+      <div style="height:16px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DETAIL SIMPLE (no equipment, no ABO) ==================== -->
+<div class="screen" id="screen-detail-simple">
+  <div class="header-teal">
+    <button class="back-btn" onclick="goBack('screen-orders')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <span>Локальная заявка</span>
+  </div>
+  <div class="screen-body">
+    <div class="db">
+      <div class="db-time">10:00 – 12:00</div>
+      <div class="db-title">Локальная заявка</div>
+      <div class="db-id-row">
+        <span class="db-id">№241259912</span>
+        <span class="link-p" id="toggle-det2" onclick="toggleDet2()">Скрыть</span>
+      </div>
+    </div>
+    <div class="db" id="det-info2">
+      <div class="db-table">
+        <div class="db-tr"><span class="db-tl">№ договора</span><span class="db-tv">48923671</span><span class="db-tn">от 12.03.2026</span></div>
+        <div class="db-tr"><span class="db-tl">CTN</span><span class="db-tv">9217696035</span></div>
+        <div class="db-tr"><span class="db-tl">Логин</span><span class="db-tv">SirotkinVF</span></div>
+      </div>
+    </div>
+    <div class="db">
+      <div class="db-work">Нет линка</div>
+      <div class="db-plat">
+        <span class="db-plat-text">ТВ платформа: неизвестно</span>
+        <span class="link-p">Определить</span>
+      </div>
+    </div>
+    <div class="db">
+      <div class="db-stat">
+        <div class="db-stat-left">
+          Статус на 10:02
+          <span class="sdot sdot-gray"></span>
+          <span class="sdot" style="background:var(--primary)"></span>
+          <span class="sdot" style="background:var(--primary)"></span>
+        </div>
+        <span class="link-p">Подробнее</span>
+      </div>
+      <div class="db-services">Сервисы</div>
+    </div>
+    <div class="action-section">
+      <div class="action-tabs">
+        <div class="atab st-initial"><span class="at-lbl">В ПУТЬ</span></div>
+        <div class="atab"><span class="at-lbl">В РАБОТУ</span></div>
+        <div class="atab st-disabled"><span class="at-lbl">ЗАВЕРШИТЬ</span></div>
+      </div>
+    </div>
+    <div class="transfer-link">Перенести или отменить</div>
+    <div class="mi" onclick="showToast('Написать в поддержку')"><span>Написать в поддержку</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi" onclick="showToast('Комментарии')"><span>Комментарии</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi disabled"><span>Действия с АБО</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi disabled"><span>Подключить SmartTV</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi disabled"><span>Заполнить чек-лист</span><span class="ch">&rsaquo;</span></div>
+    <div class="mi" onclick="showToast('Временный пароль ЛК')"><span>Временный пароль ЛК</span><span class="ch">&rsaquo;</span></div>
+  </div>
+</div>
+
+<!-- ==================== ADD EQUIPMENT SCREEN ==================== -->
+<div class="screen" id="screen-add-eq">
+  <div class="header-white">
+    <button class="back-btn" onclick="goBack('screen-abo')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <span id="add-eq-header-title">Добавить</span>
+  </div>
+  <div class="add-eq-tabs">
+    <div class="aeq-tab active" id="aeq-tab-rent" onclick="switchAddEqTab('rent')">Аренда/рассрочка</div>
+    <div class="aeq-tab" id="aeq-tab-buy" onclick="switchAddEqTab('buy')">Покупка</div>
+  </div>
+  <div class="screen-body">
+    <!-- Limit alert banner -->
+    <div class="limit-banner" id="limit-banner">
+      <div class="limit-banner-icon">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#F5A623" stroke-width="2"/><path d="M12 8v5" stroke="#F5A623" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="#F5A623"/></svg>
+      </div>
+      <div class="limit-banner-text">Добавлено максимальное количество оборудования этого типа. Чтобы добавить новое, сначала удалите одно из текущих.</div>
+    </div>
+
+    <!-- Rent tab -->
+    <div id="aeq-content-rent">
+      <div class="add-eq-card" id="add-eq-rent-card">
+        <div class="add-eq-card-body">
+          <div class="add-eq-card-title">wi-fi роутер до 1000 Мбит рассрочка 12 мес.</div>
+          <div class="add-eq-card-model">HUAWEI AX3S</div>
+          <div class="add-eq-card-serial">RX2553F14432</div>
+          <div class="add-eq-card-row">
+            <span class="add-eq-card-label">Рассрочка на 12 БЦ</span>
+            <span class="add-eq-card-price">350 &#8381;/мес</span>
+          </div>
+        </div>
+        <div class="add-eq-card-footer" id="add-eq-rent-footer">
+          <span class="add-eq-select" onclick="selectEquipment('rent')">ВЫБРАТЬ</span>
+        </div>
+      </div>
+    </div>
+    <!-- Buy tab -->
+    <div id="aeq-content-buy" style="display:none">
+      <div class="add-eq-card">
+        <div class="add-eq-card-body">
+          <div class="add-eq-card-title">wi-fi роутер до 1000 Мбит</div>
+          <div class="add-eq-card-model">HUAWEI AX3S</div>
+          <div class="add-eq-card-serial">RX2553F14432</div>
+          <div class="add-eq-card-row">
+            <span class="add-eq-card-label">Стоимость</span>
+            <span class="add-eq-card-price">4990 &#8381;/мес</span>
+          </div>
+        </div>
+        <div class="add-eq-card-footer" id="add-eq-buy-footer">
+          <span class="add-eq-select" onclick="selectEquipment('buy')">ВЫБРАТЬ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="add-eq-save" id="add-eq-save-btn" onclick="saveEquipment()">СОХРАНИТЬ</button>
+</div>
+
+<!-- ==================== REGISTER EQUIPMENT SCREEN ==================== -->
+<div class="screen" id="screen-register">
+  <div class="header-white">
+    <button class="back-btn" onclick="goBack('screen-abo')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <span>Роутер</span>
+  </div>
+  <div class="screen-body">
+    <div class="reg-input-wrap" id="reg-input-wrap">
+      <div class="reg-input-inner">
+        <div class="reg-input-label">Серийный номер роутера</div>
+        <input class="reg-input" id="reg-serial-input" type="text" placeholder="Введите серийный номер"
+               oninput="onRegInput()" onfocus="document.getElementById('reg-input-wrap').classList.add('focused')"
+               onblur="document.getElementById('reg-input-wrap').classList.remove('focused')">
+      </div>
+      <div class="reg-barcode" onclick="fillSerialDemo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="4" width="3" height="16"/><rect x="8" y="4" width="1.5" height="16"/><rect x="11.5" y="4" width="2.5" height="16"/><rect x="16" y="4" width="1" height="16"/><rect x="19" y="4" width="2" height="16"/>
+        </svg>
+      </div>
+    </div>
+    <div class="reg-help" onclick="showToast('Серийный номер указан на наклейке на нижней части роутера')">КАК НАЙТИ СЕРИЙНЫЙ НОМЕР</div>
+  </div>
+  <button class="reg-save" id="reg-save-btn" onclick="registerEquipment()">ЗАРЕГИСТРИРОВАТЬ</button>
+</div>
+
+<!-- ==================== BOTTOM SHEETS & DIALOGS ==================== -->
+
+<!-- Add equipment type bottom sheet -->
+<div class="bottom-sheet-overlay" id="bs-add-overlay" onclick="closeAddSheet()"></div>
+<div class="bottom-sheet" id="bs-add">
+  <div class="bs-title">Добавить оборудование</div>
+  <div class="bs-option" onclick="tryAddType('stb')">ТВ-приставка</div>
+  <div class="bs-option" onclick="tryAddType('stb-own')">ТВ-приставка собственная</div>
+  <div class="bs-option" onclick="tryAddType('router')">Роутер</div>
+</div>
+
+<!-- Edit router bottom sheet -->
+<div class="bottom-sheet-overlay" id="bs-edit-overlay" onclick="closeEditSheet()"></div>
+<div class="bottom-sheet" id="bs-edit">
+  <div class="bs-option disabled">Заменить роутер</div>
+  <div class="bs-option disabled">Забрать роутер</div>
+  <div class="bs-option danger" onclick="deleteFromEdit()">Удалить</div>
+</div>
+
+<!-- Delete confirmation dialog -->
+<div class="alert-overlay" id="alert-delete" onclick="closeDeleteAlert()">
+  <div class="alert-dialog" onclick="event.stopPropagation()">
+    <div class="alert-title">Удалить оборудование?</div>
+    <div class="alert-body">Оборудование будет удалено без возможности восстановления.</div>
+    <div class="alert-actions">
+      <button class="alert-btn" style="color:var(--danger)" onclick="confirmDelete()">УДАЛИТЬ</button>
+      <button class="alert-btn" onclick="closeDeleteAlert()">ОТМЕНИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Snackbar -->
+<div class="snackbar" id="snackbar-delete">
+  <span class="snackbar-text">Оборудование удалено</span>
+  <span class="snackbar-timer" id="snackbar-timer">5</span>
+  <button class="snackbar-undo" onclick="undoSnackbar()">ОТМЕНИТЬ</button>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab-bar-item active" id="tab-shift" onclick="switchTab('shift')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14" stroke-linecap="round"/></svg>
+    <span>Смена</span>
+  </div>
+  <div class="tab-bar-item" id="tab-orders-bar" onclick="switchTab('orders')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+    <span>Заявки</span>
+  </div>
+  <div class="tab-bar-item" onclick="showToast('Диагностика')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><line x1="8.5" y1="11" x2="15.5" y2="7.5"/><line x1="8.5" y1="13" x2="15.5" y2="16.5"/></svg>
+    <span>Диагностика</span>
+  </div>
+  <div class="tab-bar-item" onclick="showToast('Ещё')">
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    <span>Ещё</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ============ NAVIGATION ============ */
+const navStack = ['screen-shift'];
+
+/* ============ TAB BAR ============ */
+function switchTab(tab) {
+  const screens = { shift: 'screen-shift', orders: 'screen-orders' };
+  const tabEls = { shift: 'tab-shift', orders: 'tab-orders-bar' };
+  const targetScreen = screens[tab];
+  if (!targetScreen) return;
+
+  // Hide all main screens, show target
+  Object.values(screens).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('active','slide-in','slide-out'); }
+  });
+  document.getElementById(targetScreen).classList.add('active');
+
+  // Update tab bar active state
+  document.querySelectorAll('.tab-bar-item').forEach(el => el.classList.remove('active'));
+  const tabEl = document.getElementById(tabEls[tab]);
+  if (tabEl) tabEl.classList.add('active');
+
+  navStack.length = 0;
+  navStack.push(targetScreen);
+}
+
+function navigateTo(id) {
+  const cur = document.querySelector('.screen.active');
+  const next = document.getElementById(id);
+  if (!next || cur === next) return;
+  next.classList.add('active','slide-in');
+  cur.classList.remove('active');
+  navStack.push(id);
+  next.addEventListener('animationend', () => next.classList.remove('slide-in'), {once:true});
+}
+function goBack(tid) {
+  const cur = document.querySelector('.screen.active');
+  if (!cur) return;
+  navStack.pop();
+  const prev = document.getElementById(tid || navStack[navStack.length-1] || 'screen-orders');
+  cur.classList.add('slide-out');
+  prev.classList.add('active');
+  cur.addEventListener('animationend', () => cur.classList.remove('active','slide-out'), {once:true});
+}
+function openDetail() { navigateTo('screen-detail'); }
+function openDetailSimple() { navigateTo('screen-detail-simple'); }
+let det2Vis = true;
+function toggleDet2() {
+  det2Vis = !det2Vis;
+  document.getElementById('det-info2').style.display = det2Vis ? 'block' : 'none';
+  document.getElementById('toggle-det2').textContent = det2Vis ? 'Скрыть' : 'Показать';
+}
+
+function switchOrderTab(t) {
+  document.getElementById('tab-orders').classList.toggle('active', t==='my');
+  document.getElementById('tab-basket').classList.toggle('active', t==='basket');
+  document.getElementById('orders-my').style.display = t==='my' ? 'block' : 'none';
+  document.getElementById('orders-basket').style.display = t==='basket' ? 'block' : 'none';
+}
+
+let detVis = true;
+function toggleDet() {
+  detVis = !detVis;
+  document.getElementById('det-info').style.display = detVis ? 'block' : 'none';
+  document.getElementById('toggle-det').textContent = detVis ? 'Скрыть' : 'Показать';
+}
+let eqOpen = false;
+function toggleEq() {
+  eqOpen = !eqOpen;
+  document.getElementById('eq-list').style.display = eqOpen ? 'block' : 'none';
+  document.getElementById('eq-chev').classList.toggle('open', eqOpen);
+}
+
+/* ============ ACTION STATE MACHINE ============ */
+let aState = 'initial', timerInt = null, pSec = 0, wSec = 0;
+function doAction(t) {
+  if (t==='path' && aState==='initial') {
+    aState='in_path'; renderA(); pSec=0;
+    timerInt = setInterval(() => { pSec++; renderT(); }, 1000);
+    showToast('В пути');
+  } else if (t==='work' && aState==='in_path') {
+    clearInterval(timerInt); aState='in_work'; renderA(); wSec=0;
+    timerInt = setInterval(() => { wSec++; renderT(); }, 1000);
+    ['m-abo','m-stv','m-chk'].forEach(id => document.getElementById(id).classList.remove('disabled'));
+    showToast('В работе');
+  } else if (t==='finish' && aState==='in_work') {
+    clearInterval(timerInt); aState='done'; renderA();
+    showToast('Заявка завершена');
+  }
+}
+function renderA() {
+  const p=document.getElementById('at-path'), w=document.getElementById('at-work'), f=document.getElementById('at-fin');
+  const pl=document.getElementById('at-path-lbl');
+  [p,w,f].forEach(e => e.className='atab');
+  if (aState==='initial') { p.classList.add('st-initial'); f.classList.add('st-disabled'); pl.textContent='В ПУТЬ'; }
+  else if (aState==='in_path') { p.classList.add('st-active'); f.classList.add('st-disabled'); pl.textContent='В ПУТИ'; }
+  else if (aState==='in_work') { p.classList.add('st-done'); w.classList.add('st-active'); pl.textContent='ПУТЬ'; }
+  else if (aState==='done') { p.classList.add('st-done'); w.classList.add('st-done'); f.classList.add('st-active'); pl.textContent='ПУТЬ'; }
+  renderT();
+}
+function renderT() {
+  const tp=document.getElementById('tmr-path'), tw=document.getElementById('tmr-work');
+  tp.textContent = (aState==='in_path'||aState==='in_work'||aState==='done') ? Math.floor(pSec/60)+' мин' : '';
+  tw.textContent = (aState==='in_work'||aState==='done') ? Math.floor(wSec/60)+' мин' : '';
+}
+
+/* ============ COMMENTS ============ */
+function openCm() { document.getElementById('cm-modal').classList.add('show'); setTimeout(() => document.getElementById('cm-ta').focus(), 100); }
+function closeCm(e) { if (e.target===document.getElementById('cm-modal')) document.getElementById('cm-modal').classList.remove('show'); }
+function addCm() {
+  const ta=document.getElementById('cm-ta'), txt=ta.value.trim(); if(!txt) return;
+  const now=new Date(), d=now.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}), t=now.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  const div=document.createElement('div'); div.textContent=txt;
+  document.getElementById('cm-list').insertAdjacentHTML('afterbegin',
+    `<div class="cm-entry" style="background:#E8F5F5"><div class="cm-date">${d} ${t}</div><div class="cm-author">Вы</div><div class="cm-text">${div.innerHTML}</div></div>`);
+  ta.value=''; document.getElementById('cm-modal').classList.remove('show'); showToast('Комментарий добавлен');
+}
+
+/* ============ TOAST ============ */
+let toastT;
+function showToast(m) {
+  const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ============ ABO EQUIPMENT FLOW ============ */
+let routerDeleted = false;
+let routerReplaced = false;
+let routerRegistered = false;
+let pendingDeleteId = null;
+let selectedEqOption = null;
+let snackbarTimerInt = null;
+let snackbarCountdown = 5;
+
+function goBackAbo() {
+  goBack('screen-detail');
+}
+
+// "Добавить" button — always opens bottom sheet
+function onAddEquipment() {
+  document.getElementById('bs-add-overlay').classList.add('show');
+  document.getElementById('bs-add').classList.add('show');
+}
+function closeAddSheet() {
+  document.getElementById('bs-add-overlay').classList.remove('show');
+  document.getElementById('bs-add').classList.remove('show');
+}
+
+// Try to add equipment type — now always opens add screen
+function tryAddType(type) {
+  closeAddSheet();
+  if (type === 'router') {
+    const limitReached = !routerDeleted;
+    selectedEqOption = null;
+    document.getElementById('add-eq-save-btn').classList.remove('active');
+    // Reset card footers
+    document.getElementById('add-eq-rent-footer').innerHTML = '<span class="add-eq-select' + (limitReached ? ' disabled' : '') + '" onclick="selectEquipment(\'rent\')">ВЫБРАТЬ</span>';
+    document.getElementById('add-eq-buy-footer').innerHTML = '<span class="add-eq-select' + (limitReached ? ' disabled' : '') + '" onclick="selectEquipment(\'buy\')">ВЫБРАТЬ</span>';
+    document.getElementById('add-eq-header-title').textContent = 'Добавить';
+    // Show/hide limit banner
+    document.getElementById('limit-banner').classList.toggle('show', limitReached);
+    switchAddEqTab('rent');
+    navigateTo('screen-add-eq');
+  }
+  if ((type === 'stb' || type === 'stb-own')) {
+    const stbLimited = document.getElementById('eq-card-stb') && !document.getElementById('eq-card-stb').classList.contains('marked-delete');
+    if (stbLimited) {
+      // For STB just show the add screen with limit banner too
+      selectedEqOption = null;
+      document.getElementById('add-eq-save-btn').classList.remove('active');
+      document.getElementById('add-eq-rent-footer').innerHTML = '<span class="add-eq-select disabled" onclick="selectEquipment(\'rent\')">ВЫБРАТЬ</span>';
+      document.getElementById('add-eq-buy-footer').innerHTML = '<span class="add-eq-select disabled" onclick="selectEquipment(\'buy\')">ВЫБРАТЬ</span>';
+      document.getElementById('add-eq-header-title').textContent = 'Добавить';
+      document.getElementById('limit-banner').classList.add('show');
+      switchAddEqTab('rent');
+      navigateTo('screen-add-eq');
+    }
+  }
+}
+
+// Edit router — open bottom sheet
+function openEditRouter() {
+  document.getElementById('bs-edit-overlay').classList.add('show');
+  document.getElementById('bs-edit').classList.add('show');
+}
+function closeEditSheet() {
+  document.getElementById('bs-edit-overlay').classList.remove('show');
+  document.getElementById('bs-edit').classList.remove('show');
+}
+function deleteFromEdit() {
+  closeEditSheet();
+  pendingDeleteId = 'router';
+  document.getElementById('alert-delete').classList.add('show');
+}
+
+// Delete equipment — show alert dialog
+function onDeleteEquipment(id, e) {
+  e.stopPropagation();
+  pendingDeleteId = id;
+  document.getElementById('alert-delete').classList.add('show');
+}
+function closeDeleteAlert() {
+  document.getElementById('alert-delete').classList.remove('show');
+}
+
+function confirmDelete() {
+  closeDeleteAlert();
+  if (pendingDeleteId === 'router') {
+    routerDeleted = true;
+    const card = document.getElementById('eq-card-router');
+    card.classList.add('marked-delete');
+    const footer = document.getElementById('eq-card-router-footer');
+    footer.style.justifyContent = 'flex-end';
+    footer.innerHTML =
+      '<div class="warranty-badge warranty-bad" onclick="showToast(\'Гарантия недоступна\')">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M18 6L6 18M6 6l12 12"/></svg>Гарантия</div>';
+    showSnackbar('router');
+  } else if (pendingDeleteId === 'stb') {
+    const card = document.getElementById('eq-card-stb');
+    card.classList.add('marked-delete');
+    const footer = document.getElementById('eq-card-stb-footer');
+    footer.innerHTML = '';
+    showSnackbar('stb');
+  }
+}
+
+// Snackbar with 5s timer
+function showSnackbar(type) {
+  clearInterval(snackbarTimerInt);
+  snackbarCountdown = 5;
+  const sb = document.getElementById('snackbar-delete');
+  const timerEl = document.getElementById('snackbar-timer');
+  sb.dataset.type = type;
+  timerEl.textContent = '5';
+  sb.classList.add('show');
+
+  snackbarTimerInt = setInterval(() => {
+    snackbarCountdown--;
+    timerEl.textContent = snackbarCountdown;
+    if (snackbarCountdown <= 0) {
+      clearInterval(snackbarTimerInt);
+      sb.classList.remove('show');
+    }
+  }, 1000);
+}
+
+function undoSnackbar() {
+  clearInterval(snackbarTimerInt);
+  const sb = document.getElementById('snackbar-delete');
+  const type = sb.dataset.type;
+  sb.classList.remove('show');
+
+  if (type === 'router') {
+    routerDeleted = false;
+    const card = document.getElementById('eq-card-router');
+    card.classList.remove('marked-delete');
+    const footer = document.getElementById('eq-card-router-footer');
+    footer.style.justifyContent = '';
+    footer.innerHTML =
+      '<span class="abo-eq-lk" onclick="openEditRouter()">ИЗМЕНИТЬ</span>' +
+      '<div class="warranty-badge warranty-bad" onclick="showToast(\'Гарантия недоступна\')">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M18 6L6 18M6 6l12 12"/></svg>Гарантия</div>';
+    showToast('Удаление отменено');
+  } else if (type === 'stb') {
+    const card = document.getElementById('eq-card-stb');
+    card.classList.remove('marked-delete');
+    const footer = document.getElementById('eq-card-stb-footer');
+    footer.innerHTML = '<span class="abo-eq-lk">ИЗМЕНИТЬ</span>';
+    showToast('Удаление отменено');
+  }
+}
+
+/* ============ ADD EQUIPMENT SCREEN ============ */
+function switchAddEqTab(tab) {
+  document.getElementById('aeq-tab-rent').classList.toggle('active', tab === 'rent');
+  document.getElementById('aeq-tab-buy').classList.toggle('active', tab === 'buy');
+  document.getElementById('aeq-content-rent').style.display = tab === 'rent' ? 'block' : 'none';
+  document.getElementById('aeq-content-buy').style.display = tab === 'buy' ? 'block' : 'none';
+  if (tab === 'buy') {
+    document.getElementById('add-eq-header-title').textContent = 'Предложить новое';
+  } else {
+    document.getElementById('add-eq-header-title').textContent = 'Добавить';
+  }
+}
+
+function selectEquipment(option) {
+  selectedEqOption = option;
+  document.getElementById('add-eq-save-btn').classList.add('active');
+  const selectedHtml = '<div class="add-eq-selected"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#2DB842"/><path d="M7 12l3.5 3.5L17 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> ВЫБРАНО</div>';
+  if (option === 'rent') {
+    document.getElementById('add-eq-rent-footer').innerHTML = selectedHtml;
+    // Reset buy footer
+    document.getElementById('add-eq-buy-footer').innerHTML = '<span class="add-eq-select" onclick="selectEquipment(\'buy\')">ВЫБРАТЬ</span>';
+  } else if (option === 'buy') {
+    document.getElementById('add-eq-buy-footer').innerHTML = selectedHtml;
+    // Reset rent footer
+    document.getElementById('add-eq-rent-footer').innerHTML = '<span class="add-eq-select" onclick="selectEquipment(\'rent\')">ВЫБРАТЬ</span>';
+  }
+  showToast('Оборудование выбрано');
+}
+
+function saveEquipment() {
+  if (!selectedEqOption) return;
+  routerReplaced = true;
+  routerRegistered = false;
+
+  const card = document.getElementById('eq-card-router');
+  card.classList.remove('marked-delete');
+
+  if (selectedEqOption === 'rent') {
+    card.querySelector('.abo-eq-t').textContent = 'wi-fi роутер до 1000 Мбит рассрочка 12 мес.';
+    card.querySelector('.abo-eq-m').textContent = 'HUAWEI AX3S';
+    card.querySelector('.abo-eq-s').textContent = 'RX2553F14432';
+    card.querySelector('.abo-eq-st').textContent = '';
+    document.getElementById('router-extra').innerHTML =
+      '<div class="abo-eq-inst"><span class="abo-eq-il">Рассрочка на 12 мес.</span><span class="abo-eq-ip">350 &#8381;/мес</span></div>' +
+      '<div class="abo-eq-inst"><span class="abo-eq-il">Сумма разового списания</span><span class="abo-eq-ip">210 &#8381;/мес</span></div>';
+  } else {
+    card.querySelector('.abo-eq-t').textContent = 'wi-fi роутер до 1000 Мбит';
+    card.querySelector('.abo-eq-m').textContent = 'HUAWEI AX3S';
+    card.querySelector('.abo-eq-s').textContent = 'RX2553F14432';
+    card.querySelector('.abo-eq-st').textContent = '';
+    document.getElementById('router-extra').innerHTML =
+      '<div class="abo-eq-inst"><span class="abo-eq-il">Покупка</span><span class="abo-eq-ip">4 990 &#8381;</span></div>';
+  }
+
+  // Update footer — left-aligned
+  const footer = document.getElementById('eq-card-router-footer');
+  footer.style.justifyContent = 'flex-start';
+  footer.innerHTML = '<span class="abo-eq-lk" onclick="openRegister()">ЗАРЕГИСТРИРОВАТЬ</span>';
+
+  // Hide delete button
+  document.getElementById('router-delete-x').style.display = 'none';
+
+  goBack('screen-abo');
+  showToast('Оборудование добавлено');
+}
+
+/* ============ REGISTER SCREEN ============ */
+function openRegister() {
+  document.getElementById('reg-serial-input').value = '';
+  document.getElementById('reg-save-btn').classList.remove('active');
+  navigateTo('screen-register');
+}
+
+function onRegInput() {
+  const val = document.getElementById('reg-serial-input').value.trim();
+  document.getElementById('reg-save-btn').classList.toggle('active', val.length > 0);
+}
+
+function fillSerialDemo() {
+  document.getElementById('reg-serial-input').value = '00030094_2412';
+  document.getElementById('reg-save-btn').classList.add('active');
+  showToast('Штрих-код отсканирован');
+}
+
+function registerEquipment() {
+  const val = document.getElementById('reg-serial-input').value.trim();
+  if (!val) return;
+  routerRegistered = true;
+
+  // Update footer in ABO
+  const footer = document.getElementById('eq-card-router-footer');
+  footer.innerHTML =
+    '<div class="abo-eq-registered"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#2DB842"/><path d="M7 12l3.5 3.5L17 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> ЗАРЕГИСТРИРОВАНО</div>';
+
+  // Build summary based on selected option
+  const sc = document.getElementById('abo-summary-content');
+  if (selectedEqOption === 'rent') {
+    sc.innerHTML =
+      '<div class="abo-sum-row"><span>Ежемесячная плата</span><span style="font-weight:700">350 &#8381;/мес</span></div>' +
+      '<div class="abo-sum-row"><span>Разовое списание</span><span style="font-weight:700">210 &#8381;/мес</span></div>' +
+      '<div class="abo-sum-row total"><span>Общая сумма заказа</span><span>560 &#8381;</span></div>';
+  } else {
+    sc.innerHTML =
+      '<div class="abo-sum-row"><span>Покупка оборудования</span><span style="font-weight:700">4 990 &#8381;</span></div>' +
+      '<div class="abo-sum-row total"><span>Общая сумма заказа</span><span>4 990 &#8381;</span></div>';
+  }
+
+  // Show summary
+  document.getElementById('abo-summary-section').style.display = 'block';
+
+  goBack('screen-abo');
+  showToast('Оборудование зарегистрировано');
+
+  // Scroll to bottom after transition
+  setTimeout(() => {
+    const body = document.getElementById('abo-body');
+    body.scrollTop = body.scrollHeight;
+  }, 300);
+}
+
+/* ============ SHIFT ============ */
+let shiftStarted = false;
+let shiftTimerInt = null;
+let shiftSec = 0;
+
+function startShift() {
+  shiftStarted = true;
+  document.getElementById('shift-before').style.display = 'none';
+  document.getElementById('shift-after').style.display = 'block';
+
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('shift-start-time').textContent = h + ':' + m;
+
+  shiftSec = 0;
+  renderShiftTimer();
+  shiftTimerInt = setInterval(() => { shiftSec++; renderShiftTimer(); }, 1000);
+  showToast('Смена начата');
+}
+
+function renderShiftTimer() {
+  const hrs = Math.floor(shiftSec / 3600);
+  const mins = Math.floor((shiftSec % 3600) / 60);
+  const secs = shiftSec % 60;
+  document.getElementById('shift-timer-display').textContent =
+    hrs + ' ч ' + String(mins).padStart(2,'0') + ' мин';
+}
+</script>
+</body>
+</html>
